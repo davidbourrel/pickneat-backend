@@ -2,6 +2,8 @@ import {
   Body,
   Controller,
   Get,
+  HttpException,
+  HttpStatus,
   NotFoundException,
   Param,
   ParseIntPipe,
@@ -37,12 +39,18 @@ export class UsersController {
       console.log('user', user);
 
       if (!user.email || !user.passwordHash) {
-        throw new Error('Email and password are required');
+        throw new HttpException(
+          'Email and password are required',
+          HttpStatus.BAD_REQUEST,
+        );
       }
 
       return this.userService.createUser(user);
     } catch (error) {
-      throw new Error(`Failed to create user. Error: ${error as string}`);
+      throw new HttpException(
+        `Failed to create user. Error: ${(error as Error).message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }

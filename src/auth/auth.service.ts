@@ -33,6 +33,18 @@ export class AuthService {
     return this.authenticateUser(user);
   }
 
+  async getProfile(userEmail: string) {
+    const user = await this.userService.getUser({
+      email: userEmail,
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    return { userEmail: user.email, userId: user.id };
+  }
+
   private async verifyPassword(plainPassword: string, hashedPassword: string) {
     return await argon2.verify(hashedPassword, plainPassword);
   }

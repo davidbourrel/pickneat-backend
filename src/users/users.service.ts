@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Prisma, User } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -15,7 +15,10 @@ export class UsersService {
         where: userWhereUniqueInput,
       });
     } catch (error) {
-      throw new Error(`Failed to get user. Error: ${error as string}`);
+      throw new HttpException(
+        `Failed to get user. Error: ${(error as Error).message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -46,7 +49,10 @@ export class UsersService {
         },
       });
     } catch (error) {
-      throw new Error(`Failed to create user. Error: ${error as string}`);
+      throw new HttpException(
+        `Failed to create user. Error: ${(error as Error).message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -62,7 +68,10 @@ export class UsersService {
         data,
       });
     } catch (error) {
-      throw new Error(`Failed to update user. Error: ${error as string}`);
+      throw new HttpException(
+        `Failed to update user. Error: ${(error as Error).message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -72,7 +81,10 @@ export class UsersService {
         where,
       });
     } catch (error) {
-      throw new Error(`Failed to delete user. Error: ${error as string}`);
+      throw new HttpException(
+        `Failed to delete user. Error: ${(error as Error).message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
