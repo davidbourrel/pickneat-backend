@@ -1,6 +1,6 @@
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
-export class AuthBodyDto {
+export class LoginDto {
   @IsNotEmpty()
   @IsEmail()
   email!: string;
@@ -8,4 +8,10 @@ export class AuthBodyDto {
   @IsNotEmpty()
   @IsString()
   password!: string;
+}
+
+export class LoginResponseDto {
+  @IsNotEmpty()
+  @IsString()
+  access_token!: string;
 }

@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { User } from '@prisma/client';
 import * as argon2 from 'argon2';
 import { UsersService } from 'src/users/users.service';
-import { AuthBodyDto } from './auth-body.dto';
+import { LoginDto, LoginResponseDto } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
@@ -12,9 +12,9 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async login(authBody: AuthBodyDto): Promise<{ access_token: string }> {
+  async login(loginDto: LoginDto): Promise<LoginResponseDto> {
     const user = await this.userService.getUser({
-      email: authBody.email,
+      email: loginDto.email,
     });
 
     if (!user) {
@@ -22,7 +22,7 @@ export class AuthService {
     }
 
     const isPasswordCorrect = await this.verifyPassword(
-      authBody.password,
+      loginDto.password,
       user.passwordHash,
     );
 
