@@ -42,7 +42,12 @@ export class AuthService {
       throw new UnauthorizedException('User not found');
     }
 
-    return { userEmail: user.email, userId: user.id };
+    const userWithoutPassword = {
+      ...user,
+      passwordHash: undefined,
+    };
+
+    return userWithoutPassword;
   }
 
   private async verifyPassword(plainPassword: string, hashedPassword: string) {
