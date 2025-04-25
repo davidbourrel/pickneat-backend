@@ -5,7 +5,7 @@ import { ClearCartDto } from './dto/clear-cart.dto';
 import { GetCartDto } from './dto/get-cart.dto';
 import { RemoveFromCartDto } from './dto/remove-from-cart.dto';
 import { UpdateCartDto } from './dto/update-cart.dto';
-@Controller('carts')
+@Controller('cart')
 export class CartController {
   constructor(private readonly cartService: CartService) {}
 
