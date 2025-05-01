@@ -4,10 +4,6 @@ import { IsArray, IsNotEmpty, IsNumber } from 'class-validator';
 export class GetCartDto {
   @IsNotEmpty()
   @IsNumber()
-  cartId!: number;
-
-  @IsNotEmpty()
-  @IsNumber()
   userId!: number;
 }
 

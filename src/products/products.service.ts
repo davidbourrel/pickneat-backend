@@ -77,12 +77,19 @@ export class ProductsService {
     orderBy?: Prisma.CategoryOrderByWithRelationInput;
   }): Promise<Category[]> {
     const { skip, take, cursor, where, orderBy } = params;
-    return this.prisma.category.findMany({
+    const categories = await this.prisma.category.findMany({
       skip,
       take,
       cursor,
       where,
       orderBy,
+    });
+
+    const categoryOrder = ['Burgers', 'Sides', 'Salads', 'Drinks', 'Desserts'];
+    return categories.sort((a, b) => {
+      const indexA = categoryOrder.indexOf(a.name);
+      const indexB = categoryOrder.indexOf(b.name);
+      return indexA - indexB;
     });
   }
 }

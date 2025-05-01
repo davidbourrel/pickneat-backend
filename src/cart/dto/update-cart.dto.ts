@@ -3,15 +3,11 @@ import { IsNotEmpty, IsNumber } from 'class-validator';
 export class UpdateCartDto {
   @IsNotEmpty()
   @IsNumber()
-  cartId!: number;
+  itemId!: number;
 
   @IsNotEmpty()
   @IsNumber()
   userId!: number;
-
-  @IsNotEmpty()
-  @IsNumber()
-  productId!: number;
 
   @IsNotEmpty()
   @IsNumber()

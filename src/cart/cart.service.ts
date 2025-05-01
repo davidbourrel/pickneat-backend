@@ -10,15 +10,37 @@ export class CartService {
   constructor(private prisma: PrismaService) {}
 
   async getCart(getCartDto: GetCartDto) {
-    return this.prisma.cart.findUnique({
-      where: { id: getCartDto.cartId, userId: getCartDto.userId },
+    return this.prisma.cart.findFirst({
+      where: { userId: getCartDto.userId },
       include: {
-        items: true,
+        items: {
+          include: {
+            product: true,
+          },
+        },
       },
     });
   }
 
   async addToCart(addToCartDto: AddToCartDto) {
+    // First, try to find an existing cart for the user
+    const existingCart = await this.prisma.cart.findFirst({
+      where: { userId: addToCartDto.userId },
+    });
+
+    if (existingCart) {
+      // If cart exists, add item to existing cart
+      return this.prisma.cartItem.create({
+        data: {
+          cartId: existingCart.id,
+          productId: addToCartDto.productId,
+          quantity: 1,
+          priceAtAdding: addToCartDto.price,
+        },
+      });
+    }
+
+    // If no cart exists, create a new one with the item
     return this.prisma.cart.create({
       data: {
         userId: addToCartDto.userId,
@@ -30,27 +52,40 @@ export class CartService {
           },
         },
       },
-    });
-  }
-
-  async updateCartItem(updateCartDto: UpdateCartDto) {
-    return this.prisma.cart.update({
-      where: { id: updateCartDto.cartId, userId: updateCartDto.userId },
-      data: {
+      include: {
         items: {
-          update: {
-            where: { id: updateCartDto.productId },
-            data: { quantity: updateCartDto.quantity },
+          include: {
+            product: true,
           },
         },
       },
     });
   }
-  async removeFromCart(removeFromCartDto: RemoveFromCartDto) {
-    return this.prisma.cart.delete({
+
+  async updateCartItem(updateCartDto: UpdateCartDto) {
+    return this.prisma.cartItem.update({
       where: {
-        id: removeFromCartDto.cartId,
-        userId: removeFromCartDto.userId,
+        id: updateCartDto.itemId,
+        cart: {
+          userId: updateCartDto.userId,
+        },
+      },
+      data: {
+        quantity: updateCartDto.quantity,
+      },
+      include: {
+        product: true,
+      },
+    });
+  }
+
+  async removeFromCart(removeFromCartDto: RemoveFromCartDto) {
+    return this.prisma.cartItem.delete({
+      where: {
+        id: removeFromCartDto.itemId,
+        cart: {
+          userId: removeFromCartDto.userId,
+        },
       },
     });
   }
