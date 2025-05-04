@@ -26,10 +26,28 @@ export class CartService {
     // First, try to find an existing cart for the user
     const existingCart = await this.prisma.cart.findFirst({
       where: { userId: addToCartDto.userId },
+      include: {
+        items: true,
+      },
     });
 
     if (existingCart) {
-      // If cart exists, add item to existing cart
+      // Check if the product already exists in the cart
+      const existingItem = existingCart.items.find(
+        (item) => item.productId === addToCartDto.productId,
+      );
+
+      if (existingItem) {
+        // If product exists, update its quantity
+        return this.prisma.cartItem.update({
+          where: { id: existingItem.id },
+          data: {
+            quantity: existingItem.quantity + 1,
+          },
+        });
+      }
+
+      // If product doesn't exist, add it to the cart
       return this.prisma.cartItem.create({
         data: {
           cartId: existingCart.id,
