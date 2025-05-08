@@ -2,16 +2,15 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AddToCartDto } from './dto/add-to-cart.dto';
 import { ClearCartDto } from './dto/clear-cart.dto';
-import { GetCartDto } from './dto/get-cart.dto';
 import { RemoveFromCartDto } from './dto/remove-from-cart.dto';
 import { UpdateCartDto } from './dto/update-cart.dto';
 @Injectable()
 export class CartService {
   constructor(private prisma: PrismaService) {}
 
-  async getCart(getCartDto: GetCartDto) {
+  async getCart(userId: number) {
     return this.prisma.cart.findFirst({
-      where: { userId: getCartDto.userId },
+      where: { userId },
       include: {
         items: {
           include: {

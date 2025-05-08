@@ -1,8 +1,16 @@
-import { Body, Controller, Delete, Get, Post, Put } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Post,
+  Put,
+  Query,
+} from '@nestjs/common';
 import { CartService } from './cart.service';
 import { AddToCartDto } from './dto/add-to-cart.dto';
 import { ClearCartDto } from './dto/clear-cart.dto';
-import { GetCartDto } from './dto/get-cart.dto';
 import { RemoveFromCartDto } from './dto/remove-from-cart.dto';
 import { UpdateCartDto } from './dto/update-cart.dto';
 @Controller('cart')
@@ -10,8 +18,14 @@ export class CartController {
   constructor(private readonly cartService: CartService) {}
 
   @Get()
-  async getCart(@Body() getCartDto: GetCartDto) {
-    return this.cartService.getCart(getCartDto);
+  async getCart(@Query('userId') userId: string) {
+    const parsedUserId = parseInt(userId, 10);
+
+    if (isNaN(parsedUserId)) {
+      throw new BadRequestException('Invalid user ID');
+    }
+
+    return this.cartService.getCart(parsedUserId);
   }
 
   @Post()

@@ -1,11 +1,5 @@
 import { CartItem } from '@prisma/client';
-import { IsArray, IsNotEmpty, IsNumber } from 'class-validator';
-
-export class GetCartDto {
-  @IsNotEmpty()
-  @IsNumber()
-  userId!: number;
-}
+import { IsArray, IsNotEmpty } from 'class-validator';
 
 export class GetCartResponseDto {
   @IsNotEmpty()
