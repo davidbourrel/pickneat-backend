@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AddToCartDto } from './dto/add-to-cart.dto';
-import { ClearCartDto } from './dto/clear-cart.dto';
 import { RemoveFromCartDto } from './dto/remove-from-cart.dto';
 import { UpdateCartDto } from './dto/update-cart.dto';
 @Injectable()
@@ -40,6 +39,9 @@ export class CartService {
         // If product exists, update its quantity
         return this.prisma.cartItem.update({
           where: { id: existingItem.id },
+          include: {
+            product: true,
+          },
           data: {
             quantity: existingItem.quantity + 1,
           },
@@ -107,9 +109,9 @@ export class CartService {
     });
   }
 
-  async clearCart(clearCartDto: ClearCartDto) {
+  async clearCart(userId: number) {
     return this.prisma.cart.deleteMany({
-      where: { userId: clearCartDto.userId },
+      where: { userId },
     });
   }
 }

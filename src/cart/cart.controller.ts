@@ -10,7 +10,6 @@ import {
 } from '@nestjs/common';
 import { CartService } from './cart.service';
 import { AddToCartDto } from './dto/add-to-cart.dto';
-import { ClearCartDto } from './dto/clear-cart.dto';
 import { RemoveFromCartDto } from './dto/remove-from-cart.dto';
 import { UpdateCartDto } from './dto/update-cart.dto';
 @Controller('cart')
@@ -44,7 +43,13 @@ export class CartController {
   }
 
   @Delete()
-  async clearCart(@Body() clearCartDto: ClearCartDto) {
-    return this.cartService.clearCart(clearCartDto);
+  async clearCart(@Query('userId') userId: string) {
+    const parsedUserId = parseInt(userId, 10);
+
+    if (isNaN(parsedUserId)) {
+      throw new BadRequestException('Invalid user ID');
+    }
+
+    return this.cartService.clearCart(parsedUserId);
   }
 }
