@@ -1,4 +1,5 @@
 import { Prisma, PrismaClient } from '@prisma/client';
+import * as argon2 from 'argon2';
 
 const prisma = new PrismaClient();
 
@@ -8,6 +9,25 @@ async function main() {
   await prisma.user.deleteMany();
 
   console.log('Cleaned up the database');
+
+  console.log('Seeding users...');
+  const passwordHash = await argon2.hash('toto');
+
+  const userData = {
+    email: 'david.dupont@gmail.com',
+    firstName: 'David',
+    lastName: 'Dupont',
+    passwordHash,
+    phoneNumber: '+33666666666',
+    profileImageUrl:
+      'https://images.unsplash.com/photo-1507003211009-59f0f17ded7e',
+  };
+
+  await prisma.user.create({
+    data: userData,
+  });
+
+  console.log('Users seeded successfully');
 
   // First, create categories
   const categories = [
@@ -223,23 +243,6 @@ async function main() {
   );
 
   console.log('Products seeded successfully');
-
-  console.log('Seeding users...');
-  const userData = {
-    email: 'david.dupont@gmail.com',
-    firstName: 'David',
-    lastName: 'Dupont',
-    passwordHash: 'toto',
-    phoneNumber: '+33666666666',
-    profileImageUrl:
-      'https://images.unsplash.com/photo-1507003211009-59f0f17ded7e',
-  };
-
-  await prisma.user.create({
-    data: userData,
-  });
-
-  console.log('Users seeded successfully');
 }
 
 main()

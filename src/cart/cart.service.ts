@@ -1,93 +1,89 @@
 import { Injectable } from '@nestjs/common';
+import { CartItem } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AddToCartDto } from './dto/add-to-cart.dto';
 import { RemoveFromCartDto } from './dto/remove-from-cart.dto';
 import { UpdateCartDto } from './dto/update-cart.dto';
+
 @Injectable()
 export class CartService {
   constructor(private prisma: PrismaService) {}
 
-  async getCart(userId: number) {
-    return this.prisma.cart.findFirst({
-      where: { userId },
+  private readonly includeContent = {
+    items: {
       include: {
-        items: {
-          include: {
-            product: true,
-          },
-        },
+        product: true,
       },
+    },
+  };
+
+  async getCart(userId: number) {
+    return this.prisma.cart.findUnique({
+      where: { userId },
+      include: this.includeContent,
     });
   }
 
   async addToCart(addToCartDto: AddToCartDto) {
-    // First, try to find an existing cart for the user
-    const existingCart = await this.prisma.cart.findFirst({
+    const user = await this.prisma.user.findUnique({
+      where: { id: addToCartDto.userId },
+    });
+    if (!user) {
+      throw new Error('User does not exist');
+    }
+
+    // Find the existing cart
+    let cart = await this.prisma.cart.findUnique({
       where: { userId: addToCartDto.userId },
-      include: {
-        items: true,
-      },
+      include: this.includeContent,
     });
 
-    if (existingCart) {
-      // Check if the product already exists in the cart
-      const existingItem = existingCart.items.find(
-        (item) => item.productId === addToCartDto.productId,
-      );
-
-      if (existingItem) {
-        // If product exists, update its quantity
-        return this.prisma.cartItem.update({
-          where: { id: existingItem.id },
-          include: {
-            product: true,
-          },
-          data: {
-            quantity: existingItem.quantity + 1,
-          },
-        });
-      }
-
-      // If product doesn't exist, add it to the cart
-      return this.prisma.cartItem.create({
-        data: {
-          cartId: existingCart.id,
-          productId: addToCartDto.productId,
-          quantity: 1,
-          priceAtAdding: addToCartDto.price,
-        },
+    // If it doesn't exist, create it
+    if (!cart) {
+      cart = await this.prisma.cart.create({
+        data: { userId: addToCartDto.userId },
+        include: this.includeContent,
       });
     }
 
-    // If no cart exists, create a new one with the item
-    return this.prisma.cart.create({
+    // Check if the product already exists in the cart
+    const items = (cart.items ?? []) as CartItem[];
+
+    const existingItem = items.find(
+      (item) => item.productId === addToCartDto.productId,
+    );
+
+    if (existingItem) {
+      // If the product exists, update the quantity
+      return this.prisma.cartItem.update({
+        where: { id: existingItem.id },
+        include: { product: true },
+        data: { quantity: existingItem.quantity + 1 },
+      });
+    }
+
+    // Otherwise, add the product to the cart
+    return this.prisma.cartItem.create({
       data: {
-        userId: addToCartDto.userId,
-        items: {
-          create: {
-            productId: addToCartDto.productId,
-            quantity: 1,
-            priceAtAdding: addToCartDto.price,
-          },
-        },
+        cartId: cart.id,
+        productId: addToCartDto.productId,
+        quantity: 1,
+        priceAtAdding: addToCartDto.price,
       },
-      include: {
-        items: {
-          include: {
-            product: true,
-          },
-        },
-      },
+      include: { product: true },
     });
   }
 
   async updateCartItem(updateCartDto: UpdateCartDto) {
+    // Check that the item belongs to the user's cart
+    const cart = await this.prisma.cart.findUnique({
+      where: { userId: updateCartDto.userId },
+    });
+    if (!cart) throw new Error('Cart not found');
+
     return this.prisma.cartItem.update({
       where: {
         id: updateCartDto.itemId,
-        cart: {
-          userId: updateCartDto.userId,
-        },
       },
       data: {
         quantity: updateCartDto.quantity,
@@ -99,19 +95,29 @@ export class CartService {
   }
 
   async removeFromCart(removeFromCartDto: RemoveFromCartDto) {
+    // Check that the item belongs to the user's cart
+    const cart = await this.prisma.cart.findUnique({
+      where: { userId: removeFromCartDto.userId },
+    });
+    if (!cart) throw new Error('Cart not found');
+
     return this.prisma.cartItem.delete({
       where: {
         id: removeFromCartDto.itemId,
-        cart: {
-          userId: removeFromCartDto.userId,
-        },
       },
     });
   }
 
   async clearCart(userId: number) {
-    return this.prisma.cart.deleteMany({
+    // 1. Get the user's cart
+    const cart = await this.prisma.cart.findUnique({
       where: { userId },
+    });
+    if (!cart) return null;
+
+    // 2. Delete all items from the cart
+    await this.prisma.cartItem.deleteMany({
+      where: { cartId: cart.id },
     });
   }
 }
